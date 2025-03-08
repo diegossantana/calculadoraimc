@@ -30,12 +30,29 @@ class MinhaCalculadoraDeImc extends StatefulWidget {
 }
 
 class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
-  TextEditingController pesoController = TextEditingController(text: '');
-  TextEditingController alturaController = TextEditingController(text: '');
+  TextEditingController? pesoController;
+  TextEditingController? alturaController;
 
-  double imc = -1;
-  String classificacao = '';
-  Color corResultado = Colors.white;
+  double? imc;
+  String? classificacao;
+  Color? corResultado;
+
+  @override
+  void initState() {
+    pesoController = TextEditingController(text: '');
+    alturaController = TextEditingController(text: '');
+    imc = -1;
+    classificacao = '';
+    corResultado = Colors.white;
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    pesoController!.dispose();
+    alturaController!.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,27 +84,18 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
                   height: 300,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(150),
-                    border: Border.all(
-                      width: 6,
-                      color: Colors.greenAccent.shade700,
-                    ),
+                    border: Border.all(width: 6, color: corResultado!),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        imc.toStringAsFixed(2),
-                        style: TextStyle(
-                          fontSize: 42,
-                          color: Colors.greenAccent.shade700,
-                        ),
+                        imc!.toStringAsFixed(2),
+                        style: TextStyle(fontSize: 42, color: corResultado),
                       ),
                       Text(
-                        classificacao = getClassificacaoIMC(imc),
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.greenAccent.shade700,
-                        ),
+                        classificacao!,
+                        style: TextStyle(fontSize: 20, color: corResultado),
                       ),
                     ],
                   ),
@@ -141,26 +149,53 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
             Container(
               width: 200,
               height: 60,
-              child: ElevatedButton(
-                onPressed: () {
-                  double peso = double.parse(pesoController.text);
-                  double altura = double.parse(alturaController.text);
-                  setState(() {
-                    imc = peso / (altura * altura);
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      18,
-                    ), // Borda arredondada
+              child: Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      try {
+                        double peso = double.parse(pesoController!.text);
+                        double altura = double.parse(alturaController!.text);
+                        setState(() {
+                          imc = peso / (altura * altura);
+                          classificacao = getClassificacaoIMC(imc!);
+                          corResultado = getCorIMC(imc!);
+                        });
+                      } on Exception {
+                        resetFields();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          18,
+                        ), // Borda arredondada
+                      ),
+                    ),
+                    child: Text(
+                      'Calcular',
+                      style: TextStyle(fontSize: 20, color: Colors.white),
+                    ),
                   ),
-                ),
-                child: Text(
-                  'Calcular',
-                  style: TextStyle(fontSize: 20, color: Colors.white),
-                ),
+                  SizedBox(width: 5),
+                  ElevatedButton(
+                    onPressed: resetFields,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black87,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          18,
+                        ), // Borda arredondada
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.restart_alt_outlined,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -185,5 +220,33 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
     }
 
     return 'IMC inválido: $imc';
+  }
+
+  Color getCorIMC(double imc) {
+    if (imc <= 18.5) {
+      return Colors.blue;
+    } else if (imc >= 18.5 && imc <= 24.9) {
+      return Colors.greenAccent.shade700;
+    } else if (imc >= 25.0 && imc <= 29.9) {
+      return Color(0xFFF4BE8E);
+    } else if (imc >= 30.0 && imc <= 34.9) {
+      return Color(0xFFEE9809);
+    } else if (imc >= 35.0 && imc <= 39.9) {
+      return Color(0xFFE44F38);
+    } else if (imc >= 40.0) {
+      return Colors.red;
+    }
+
+    return Colors.lightBlueAccent;
+  }
+
+  void resetFields() {
+    setState(() {
+      pesoController = TextEditingController(text: '');
+      alturaController = TextEditingController(text: '');
+      imc = -1;
+      classificacao = '';
+      corResultado = Colors.black;
+    });
   }
 }
