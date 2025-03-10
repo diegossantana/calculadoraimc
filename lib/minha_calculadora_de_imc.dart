@@ -47,8 +47,11 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
         title: Text('Calculador IMC'),
         leading: Icon(Icons.calculate_rounded),
         backgroundColor: Colors.blueAccent.shade100,
+        toolbarHeight: 30,
+        centerTitle: true,
       ),
       body: Container(
+        padding: EdgeInsets.fromLTRB(0, 8, 0, 0),
         width: double.infinity,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -61,7 +64,7 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
                   imc: imc,
                   classificacao: classificacao,
                 ),
-            SizedBox(height: 40),
+            SizedBox(height: 15),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
