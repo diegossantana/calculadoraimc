@@ -1,3 +1,5 @@
+import 'package:calculadoraimc/alert_message.dart';
+import 'package:calculadoraimc/info_imc.dart';
 import 'package:flutter/material.dart';
 
 class MinhaCalculadoraDeImc extends StatefulWidget {
@@ -15,10 +17,15 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
   String? classificacao;
   Color? corResultado;
 
+  double? valorAltura = 1.70;
+  double? valorPeso = 62;
+
   @override
   void initState() {
-    pesoController = TextEditingController(text: '');
-    alturaController = TextEditingController(text: '');
+    pesoController = TextEditingController(text: valorPeso!.toStringAsFixed(2));
+    alturaController = TextEditingController(
+      text: valorAltura!.toStringAsFixed(2),
+    );
     imc = -1;
     classificacao = '';
     corResultado = Colors.white;
@@ -39,7 +46,7 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
       appBar: AppBar(
         title: Text('Calculador IMC'),
         leading: Icon(Icons.calculate_rounded),
-        backgroundColor: Colors.blueGrey.shade600,
+        backgroundColor: Colors.blueAccent.shade100,
       ),
       body: Container(
         width: double.infinity,
@@ -48,79 +55,19 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             imc == -1
-                ? Text(
-                  'Calcule seu IMC \n Insira seu peso e sua altura nos campos abaixo.',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  textAlign: TextAlign.center,
-                )
-                : Container(
-                  width: 300,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(150),
-                    border: Border.all(width: 6, color: corResultado!),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        imc!.toStringAsFixed(2),
-                        style: TextStyle(fontSize: 42, color: corResultado),
-                      ),
-                      Text(
-                        classificacao!,
-                        style: TextStyle(fontSize: 20, color: corResultado),
-                      ),
-                    ],
-                  ),
+                ? AlertMessage()
+                : InfoImc(
+                  corResultado: corResultado,
+                  imc: imc,
+                  classificacao: classificacao,
                 ),
             SizedBox(height: 40),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Column(
-                  children: [
-                    Text('Seu peso', style: TextStyle(fontSize: 20)),
-                    SizedBox(height: 8),
-                    Container(
-                      width: 75,
-                      child: TextField(
-                        controller: pesoController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          suffixText: 'kg',
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
+                Expanded(child: onPesoTextFieldSlider()),
                 SizedBox(width: 22),
-                Column(
-                  children: [
-                    Text('Sua altura', style: TextStyle(fontSize: 20)),
-                    SizedBox(height: 8),
-                    Container(
-                      width: 75,
-                      child: TextField(
-                        controller: alturaController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          suffixText: 'm',
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
+                Expanded(child: onAlturaTextFieldSlider()),
               ],
             ),
             SizedBox(height: 40),
@@ -129,56 +76,134 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
               height: 60,
               child: Row(
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      try {
-                        double peso = double.parse(pesoController!.text);
-                        double altura = double.parse(alturaController!.text);
-                        setState(() {
-                          imc = peso / (altura * altura);
-                          classificacao = getClassificacaoIMC(imc!);
-                          corResultado = getCorIMC(imc!);
-                        });
-                      } on Exception {
-                        resetFields();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          18,
-                        ), // Borda arredondada
-                      ),
-                    ),
-                    child: Text(
-                      'Calcular',
-                      style: TextStyle(fontSize: 20, color: Colors.white),
-                    ),
-                  ),
+                  onBotaoCalcular(),
                   SizedBox(width: 5),
-                  ElevatedButton(
-                    onPressed: resetFields,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black87,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          18,
-                        ), // Borda arredondada
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.restart_alt_outlined,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
+                  onBotaoResetar(),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  ElevatedButton onBotaoResetar() {
+    return ElevatedButton(
+      onPressed: resetFields,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blueAccent.shade100,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18), // Borda arredondada
+        ),
+      ),
+      child: Icon(Icons.restart_alt_outlined, color: Colors.white, size: 24),
+    );
+  }
+
+  ElevatedButton onBotaoCalcular() {
+    return ElevatedButton(
+      onPressed: () {
+        try {
+          double peso = double.parse(pesoController!.text);
+          double altura = double.parse(alturaController!.text);
+          setState(() {
+            imc = peso / (altura * altura);
+            classificacao = getClassificacaoIMC(imc!);
+            corResultado = getCorIMC(imc!);
+          });
+        } on Exception {
+          resetFields();
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blueAccent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18), // Borda arredondada
+        ),
+      ),
+      child: Text(
+        'Calcular',
+        style: TextStyle(fontSize: 20, color: Colors.white),
+      ),
+    );
+  }
+
+  Column onAlturaTextFieldSlider() {
+    return Column(
+      children: [
+        Text('Sua altura', style: TextStyle(fontSize: 20)),
+        SizedBox(height: 8),
+        Container(
+          width: 85,
+          child: TextField(
+            enabled: false,
+            controller: alturaController,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              suffixText: 'm',
+            ),
+            keyboardType: TextInputType.number,
+          ),
+        ),
+        SliderTheme(
+          data: SliderThemeData(trackHeight: 3),
+          child: Slider(
+            activeColor: Colors.blueAccent,
+            inactiveColor: Colors.blueGrey.shade200,
+            value: valorAltura!,
+            onChanged: (altura) {
+              setState(() {
+                valorAltura = altura;
+                alturaController!.text = altura.toStringAsFixed(2);
+              });
+            },
+            min: 0.30,
+            max: 3.00,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column onPesoTextFieldSlider() {
+    return Column(
+      children: [
+        Text('Seu peso', style: TextStyle(fontSize: 20)),
+        SizedBox(height: 8),
+        Container(
+          width: 95,
+          child: TextField(
+            enabled: false,
+            controller: pesoController,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              suffixText: 'kg',
+            ),
+            keyboardType: TextInputType.number,
+          ),
+        ),
+        SliderTheme(
+          data: SliderThemeData(trackHeight: 3),
+          child: Slider(
+            activeColor: Colors.blueAccent,
+            inactiveColor: Colors.blueGrey.shade200,
+            value: valorPeso!,
+            onChanged: (peso) {
+              setState(() {
+                valorPeso = peso;
+                pesoController!.text = valorPeso!.toStringAsFixed(2);
+              });
+            },
+            min: 1,
+            max: 250,
+          ),
+        ),
+      ],
     );
   }
 
@@ -220,8 +245,14 @@ class _MinhaCalculadoraDeImcState extends State<MinhaCalculadoraDeImc> {
 
   void resetFields() {
     setState(() {
-      pesoController = TextEditingController(text: '');
-      alturaController = TextEditingController(text: '');
+      valorAltura = 1.70;
+      valorPeso = 62;
+      pesoController = TextEditingController(
+        text: valorPeso!.toStringAsFixed(2),
+      );
+      alturaController = TextEditingController(
+        text: valorAltura!.toStringAsFixed(2),
+      );
       imc = -1;
       classificacao = '';
       corResultado = Colors.black;
